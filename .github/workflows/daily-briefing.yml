@@ -3,7 +3,6 @@ name: Daily Slack Briefing
 on:
   schedule:
     - cron: '30 22 * * *' # 07:30 KST
-    - cron: '*/5 * * * *' # test: every 5 minutes
   workflow_dispatch:
 
 jobs:
