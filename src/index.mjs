@@ -45,6 +45,11 @@ async function sendDailyBriefing() {
 
 await sendDailyBriefing();
 
+if (config.runOnce) {
+  console.log('Run-once mode enabled. Exiting after single send.');
+  process.exit(0);
+}
+
 cron.schedule(
   config.scheduleCron,
   () => {
