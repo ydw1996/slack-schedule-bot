@@ -193,13 +193,13 @@ async function fetchNasdaqLike() {
 }
 
 async function fetchWtiLike() {
-  const candidates = ['WTI', 'USOIL', 'CL/USD', 'CL=F'];
+  const candidates = ['CL=F', 'USOIL', 'WTI', 'CL/USD'];
   let lastError = null;
 
   for (const symbol of candidates) {
     try {
       const price = await fetchPrice(symbol, `WTI(${symbol})`);
-      assertInRange(price.value, { min: 10, max: 300, label: 'WTI', symbol });
+      assertInRange(price.value, { min: 15, max: 300, label: 'WTI', symbol });
       return { ...price, symbol };
     } catch (error) {
       lastError = error;
@@ -210,13 +210,13 @@ async function fetchWtiLike() {
 }
 
 async function fetchGoldLike() {
-  const candidates = ['XAU/USD', 'GC/USD', 'GOLD', 'GC=F'];
+  const candidates = ['XAU/USD', 'GC=F', 'GC/USD'];
   let lastError = null;
 
   for (const symbol of candidates) {
     try {
       const price = await fetchPrice(symbol, `Gold(${symbol})`);
-      assertInRange(price.value, { min: 500, max: 5000, label: 'Gold', symbol });
+      assertInRange(price.value, { min: 800, max: 4000, label: 'Gold', symbol });
       return { ...price, symbol };
     } catch (error) {
       lastError = error;
@@ -269,8 +269,7 @@ async function buildIndicesLine() {
     parts.push(formatIndex('나스닥', nasdaq.value, calcPercentChange(nasdaq.value, nasdaq.previous)));
   }
   if (kospi) {
-    const kospiLabel = ['KOSPI', '^KS11', '069500:KRX'].includes(kospi.symbol) ? '코스피' : '코스피(대체)';
-    parts.push(formatIndex(kospiLabel, kospi.value, calcPercentChange(kospi.value, kospi.previous)));
+    parts.push(formatIndex('코스피', kospi.value, calcPercentChange(kospi.value, kospi.previous)));
   }
 
   return parts.length > 0 ? `지수: ${parts.join(' / ')}` : '지수: 조회 실패';
