@@ -68,6 +68,20 @@ function calcPercentChange(current, previous) {
   return ((current - previous) / previous) * 100;
 }
 
+function assertInRange(value, { min, max, label, symbol }) {
+  if (!Number.isFinite(value)) {
+    throw new Error(`${label}(${symbol}) value is not numeric.`);
+  }
+
+  if (Number.isFinite(min) && value < min) {
+    throw new Error(`${label}(${symbol}) is below expected range: ${value}`);
+  }
+
+  if (Number.isFinite(max) && value > max) {
+    throw new Error(`${label}(${symbol}) is above expected range: ${value}`);
+  }
+}
+
 function parseErrorMessage(payload, label) {
   if (payload?.status === 'error' && payload?.message) {
     return `${label} error: ${payload.message}`;
@@ -128,7 +142,7 @@ async function fetchPrice(symbol, label) {
   return { value };
 }
 
-async function fetchDailyCloseWithCandidates(symbols, label) {
+async function fetchDailyCloseWithCandidates(symbols, label, rangeOptions = null) {
   let lastError = null;
 
   for (const symbol of symbols) {
@@ -139,6 +153,12 @@ async function fetchDailyCloseWithCandidates(symbols, label) {
         `${label}(${symbol})`,
       );
       const result = parseTimeSeries(payload, `${label}(${symbol})`);
+      if (rangeOptions) {
+        assertInRange(result.value, { ...rangeOptions, label, symbol });
+        if (Number.isFinite(result.previous)) {
+          assertInRange(result.previous, { ...rangeOptions, label, symbol });
+        }
+      }
       return {
         ...result,
         symbol,
@@ -152,24 +172,34 @@ async function fetchDailyCloseWithCandidates(symbols, label) {
 }
 
 async function fetchKospiLike() {
-  return fetchDailyCloseWithCandidates(['KOSPI', '^KS11', '069500:KRX', 'EWY'], 'KOSPI');
+  return fetchDailyCloseWithCandidates(['KOSPI', '^KS11'], 'KOSPI', {
+    min: 500,
+    max: 6000,
+  });
 }
 
 async function fetchSp500Like() {
-  return fetchDailyCloseWithCandidates(['SPX', 'SPY'], 'S&P 500');
+  return fetchDailyCloseWithCandidates(['SPX', '^GSPC', 'GSPC'], 'S&P 500', {
+    min: 1000,
+    max: 20000,
+  });
 }
 
 async function fetchNasdaqLike() {
-  return fetchDailyCloseWithCandidates(['IXIC', 'QQQ'], 'NASDAQ');
+  return fetchDailyCloseWithCandidates(['IXIC', '^IXIC'], 'NASDAQ', {
+    min: 1000,
+    max: 30000,
+  });
 }
 
 async function fetchWtiLike() {
-  const candidates = ['WTI', 'USOIL', 'CL=F'];
+  const candidates = ['WTI', 'USOIL', 'CL/USD', 'CL=F'];
   let lastError = null;
 
   for (const symbol of candidates) {
     try {
       const price = await fetchPrice(symbol, `WTI(${symbol})`);
+      assertInRange(price.value, { min: 10, max: 300, label: 'WTI', symbol });
       return { ...price, symbol };
     } catch (error) {
       lastError = error;
@@ -180,12 +210,13 @@ async function fetchWtiLike() {
 }
 
 async function fetchGoldLike() {
-  const candidates = ['XAU/USD', 'GOLD', 'GC=F'];
+  const candidates = ['XAU/USD', 'GC/USD', 'GOLD', 'GC=F'];
   let lastError = null;
 
   for (const symbol of candidates) {
     try {
       const price = await fetchPrice(symbol, `Gold(${symbol})`);
+      assertInRange(price.value, { min: 500, max: 5000, label: 'Gold', symbol });
       return { ...price, symbol };
     } catch (error) {
       lastError = error;
