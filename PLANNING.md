@@ -8,7 +8,7 @@
 - 투자 브리핑
 - 일정 브리핑
 
-현재는 출근 브리핑(날씨/미세먼지)만 실데이터 연동 완료 상태다.
+현재는 출근 브리핑(날씨/미세먼지), 투자 브리핑(환율/지수/원자재) 실데이터 연동 완료 상태다.
 
 ---
 
@@ -24,7 +24,7 @@ src/bot/sendSlack.mjs          # Slack Webhook 발송
 src/shared/http.mjs            # 공통 HTTP 유틸
 src/shared/time.mjs            # 시간 포맷 유틸
 src/briefings/commute/index.mjs  # 출근 브리핑 (k-skill 날씨/미세먼지)
-src/briefings/invest/index.mjs   # 투자 브리핑 (스캐폴드)
+src/briefings/invest/index.mjs   # 투자 브리핑 (환율/지수/원자재)
 src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 ```
 
@@ -49,6 +49,11 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 출근 브리핑:
 - 날씨: `k-skill-proxy /v1/korea-weather/forecast`
 - 미세먼지: `k-skill-proxy /v1/fine-dust/report`
+
+투자 브리핑:
+- 환율(원/달러, 원/엔): `Twelve Data price`
+- 지수(S&P, 나스닥, 코스피): `Twelve Data time_series` (심볼 fallback)
+- 원자재(유가/금): `Twelve Data price` (심볼 fallback)
 
 가이드 반영 정책:
 - `KSKILL_PROXY_BASE_URL`은 self-host 또는 배포 검증이 끝난 proxy URL을 명시 설정한다.
@@ -82,6 +87,7 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 필수:
 - `SLACK_WEBHOOK_URL`
 - `KSKILL_PROXY_BASE_URL` (self-host 또는 배포 검증 proxy)
+- `TWELVE_DATA_API_KEY` (투자 브리핑)
 
 권장:
 - `BOT_NAME`
@@ -94,11 +100,10 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 ---
 
 ## 7) 다음 우선순위 (실행 순서)
-1. 투자 브리핑 실데이터 연동
-2. 일정 브리핑(캘린더) 연동
-3. 섹션 ON/OFF 환경변수 도입
-4. 실패 알림 정책 정리 (부분 실패 vs 전체 실패 메시지)
-5. 메시지 포맷 고도화 (가독성/줄수 최적화)
+1. 일정 브리핑(캘린더) 연동
+2. 섹션 ON/OFF 환경변수 도입
+3. 실패 알림 정책 정리 (부분 실패 vs 전체 실패 메시지)
+4. 메시지 포맷 고도화 (가독성/줄수 최적화)
 
 ---
 

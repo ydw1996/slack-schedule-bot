@@ -12,4 +12,8 @@ export const config = {
     lon: process.env.BRIEFING_LON || '126.9780',
     regionHint: process.env.BRIEFING_REGION_HINT || '서울 중구',
   },
+  invest: {
+    twelveDataApiKey: process.env.TWELVE_DATA_API_KEY || '',
+    twelveDataBaseUrl: process.env.TWELVE_DATA_API_BASE_URL || 'https://api.twelvedata.com',
+  },
 };

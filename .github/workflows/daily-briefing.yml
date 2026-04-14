@@ -10,6 +10,7 @@ jobs:
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       KSKILL_PROXY_BASE_URL: ${{ secrets.KSKILL_PROXY_BASE_URL }}
+      TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
       BRIEFING_TIMEZONE: Asia/Seoul
       BRIEFING_RUN_ONCE: 'true'
       BRIEFING_LAT: '37.5258'
@@ -38,6 +39,7 @@ jobs:
         run: |
           test -n "$SLACK_WEBHOOK_URL" || (echo "SLACK_WEBHOOK_URL is missing" && exit 1)
           test -n "$KSKILL_PROXY_BASE_URL" || (echo "KSKILL_PROXY_BASE_URL is missing" && exit 1)
+          test -n "$TWELVE_DATA_API_KEY" || (echo "TWELVE_DATA_API_KEY is missing" && exit 1)
 
       - name: Proxy route health check
         run: |
