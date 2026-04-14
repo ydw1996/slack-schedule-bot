@@ -15,7 +15,6 @@ jobs:
       BRIEFING_LAT: '37.5258'
       BRIEFING_LON: '126.8966'
       BRIEFING_REGION_HINT: 서울 영등포구
-      BRIEFING_WEATHER_TARGET_TIME: '0800'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

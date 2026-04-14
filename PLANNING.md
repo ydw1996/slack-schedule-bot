@@ -57,7 +57,7 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 출근 브리핑 기준값:
 - 좌표: `BRIEFING_LAT`, `BRIEFING_LON`
 - 지역 힌트: `BRIEFING_REGION_HINT`
-- 날씨 목표 시각: `BRIEFING_WEATHER_TARGET_TIME` (예: `0800`)
+- 날씨 시각: 현재 시각(KST) 기준 가장 가까운 예보 시점을 자동 선택
 
 현재 운영 기본값은 영등포 기준으로 세팅되어 있다.
 
@@ -90,7 +90,6 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 - `BRIEFING_LAT`
 - `BRIEFING_LON`
 - `BRIEFING_REGION_HINT`
-- `BRIEFING_WEATHER_TARGET_TIME`
 
 ---
 

@@ -27,7 +27,29 @@ function getForecastItems(payload) {
   return payload?.response?.body?.items?.item || [];
 }
 
-function pickForecast(items, targetTime) {
+function toForecastTimestamp(entry) {
+  const date = String(entry.fcstDate || '');
+  const time = String(entry.fcstTime || '').padStart(4, '0');
+
+  if (!/^\d{8}$/.test(date) || !/^\d{4}$/.test(time)) {
+    return null;
+  }
+
+  const year = Number.parseInt(date.slice(0, 4), 10);
+  const month = Number.parseInt(date.slice(4, 6), 10);
+  const day = Number.parseInt(date.slice(6, 8), 10);
+  const hour = Number.parseInt(time.slice(0, 2), 10);
+  const minute = Number.parseInt(time.slice(2, 4), 10);
+
+  if (hour > 23 || minute > 59) {
+    return null;
+  }
+
+  // fcstDate/fcstTime are in KST, convert to UTC timestamp for stable comparison.
+  return Date.UTC(year, month - 1, day, hour - 9, minute);
+}
+
+function pickForecast(items, now = new Date()) {
   const grouped = new Map();
 
   for (const item of items) {
@@ -45,15 +67,30 @@ function pickForecast(items, targetTime) {
     `${a.fcstDate}${a.fcstTime}`.localeCompare(`${b.fcstDate}${b.fcstTime}`),
   );
 
-  return (
-    forecasts.find((entry) => entry.fcstTime === config.commute.weatherTargetTime) ||
-    forecasts.find((entry) => entry.TMP || entry.SKY || entry.PTY) ||
-    {}
-  );
+  const nowTimestamp = now.getTime();
+  let nearest = null;
+
+  for (const entry of forecasts) {
+    if (!entry.TMP && !entry.SKY && !entry.PTY) {
+      continue;
+    }
+
+    const timestamp = toForecastTimestamp(entry);
+    if (timestamp === null) {
+      continue;
+    }
+
+    const distance = Math.abs(timestamp - nowTimestamp);
+    if (!nearest || distance < nearest.distance || (distance === nearest.distance && timestamp > nearest.timestamp)) {
+      nearest = { entry, timestamp, distance };
+    }
+  }
+
+  return nearest?.entry || forecasts.find((entry) => entry.TMP || entry.SKY || entry.PTY) || {};
 }
 
 function summarizeWeather(payload) {
-  const forecast = pickForecast(getForecastItems(payload), config.commute.weatherTargetTime);
+  const forecast = pickForecast(getForecastItems(payload));
   const sky = weatherSky[forecast.SKY] || '정보 없음';
   const precipitation = weatherPrecipitation[forecast.PTY];
   const temperature = forecast.TMP ? `${forecast.TMP}도` : '기온 정보 없음';
