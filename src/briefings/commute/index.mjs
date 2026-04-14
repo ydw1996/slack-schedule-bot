@@ -113,6 +113,10 @@ function summarizeAirQuality(payload) {
 }
 
 function createDailySummary({ weather, airQuality }) {
+  if (weather.includes('정보 확인 실패') || airQuality.includes('정보 확인 실패')) {
+    return '외부 데이터 조회에 실패해 요약 신뢰도가 낮습니다. 잠시 후 재시도 권장';
+  }
+
   if (airQuality.includes('나쁨')) {
     return '마스크 챙기고 실내 이동 위주로 준비 추천';
   }
@@ -135,6 +139,12 @@ async function withFallback(label, fallback, task) {
 
 async function getWeather() {
   return withFallback('Weather', '날씨 정보 확인 실패', async () => {
+    if (!config.kskillProxyBaseUrl) {
+      throw new Error(
+        'KSKILL_PROXY_BASE_URL is required for /v1/korea-weather/forecast. Set a self-host or verified proxy URL.',
+      );
+    }
+
     const url = buildUrl(config.kskillProxyBaseUrl, '/v1/korea-weather/forecast', {
       lat: config.commute.lat,
       lon: config.commute.lon,
@@ -149,6 +159,12 @@ async function getAirQuality() {
     'Air quality',
     { text: '미세먼지 정보 확인 실패' },
     async () => {
+      if (!config.kskillProxyBaseUrl) {
+        throw new Error(
+          'KSKILL_PROXY_BASE_URL is required for /v1/fine-dust/report. Set a self-host or verified proxy URL.',
+        );
+      }
+
       const url = buildUrl(config.kskillProxyBaseUrl, '/v1/fine-dust/report', {
         regionHint: config.commute.regionHint,
       });

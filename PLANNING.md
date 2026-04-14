@@ -40,12 +40,19 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 - `BRIEFING_CRON=0 8 * * *`
 - `BRIEFING_TIMEZONE=Asia/Seoul`
 
+운영 권장:
+- GitHub Actions `schedule` 대신 EventBridge Scheduler + Lambda에서 `workflow_dispatch` 트리거
+
 ---
 
 ## 4) 데이터 소스
 출근 브리핑:
 - 날씨: `k-skill-proxy /v1/korea-weather/forecast`
 - 미세먼지: `k-skill-proxy /v1/fine-dust/report`
+
+가이드 반영 정책:
+- `KSKILL_PROXY_BASE_URL`은 self-host 또는 배포 검증이 끝난 proxy URL을 명시 설정한다.
+- hosted 기본 도메인 하드코딩은 사용하지 않는다.
 
 출근 브리핑 기준값:
 - 좌표: `BRIEFING_LAT`, `BRIEFING_LON`
@@ -74,10 +81,10 @@ src/briefings/schedule/index.mjs # 일정 브리핑 (스캐폴드)
 ## 6) 환경변수 명세
 필수:
 - `SLACK_WEBHOOK_URL`
+- `KSKILL_PROXY_BASE_URL` (self-host 또는 배포 검증 proxy)
 
 권장:
 - `BOT_NAME`
-- `KSKILL_PROXY_BASE_URL`
 - `BRIEFING_TIMEZONE`
 - `BRIEFING_CRON`
 - `BRIEFING_LAT`

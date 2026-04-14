@@ -21,8 +21,12 @@ export async function fetchJson(url, { timeoutMs = 15000 } = {}) {
   const body = await response.text();
 
   if (!response.ok) {
-    throw new Error(`Request failed: ${response.status} ${body}`);
+    throw new Error(`Request failed (${url}): ${response.status} ${body.slice(0, 300)}`);
   }
 
-  return JSON.parse(body);
+  try {
+    return JSON.parse(body);
+  } catch (error) {
+    throw new Error(`Invalid JSON (${url}): ${body.slice(0, 300)}`);
+  }
 }

@@ -3,7 +3,7 @@ import 'dotenv/config';
 export const config = {
   botName: process.env.BOT_NAME || 'My Briefing Bot',
   slackWebhookUrl: process.env.SLACK_WEBHOOK_URL || '',
-  kskillProxyBaseUrl: process.env.KSKILL_PROXY_BASE_URL || 'https://k-skill-proxy.nomadamas.org',
+  kskillProxyBaseUrl: process.env.KSKILL_PROXY_BASE_URL || '',
   timezone: process.env.BRIEFING_TIMEZONE || 'Asia/Seoul',
   scheduleCron: process.env.BRIEFING_CRON || '0 8 * * *',
   runOnce: process.env.BRIEFING_RUN_ONCE === 'true',

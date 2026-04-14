@@ -1,8 +1,6 @@
 name: Daily Slack Briefing
 
 on:
-  schedule:
-    - cron: '30 22 * * *' # 07:30 KST
   workflow_dispatch:
 
 jobs:
@@ -11,7 +9,7 @@ jobs:
     timeout-minutes: 10
     env:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      KSKILL_PROXY_BASE_URL: https://k-skill-proxy.nomadamas.org
+      KSKILL_PROXY_BASE_URL: ${{ secrets.KSKILL_PROXY_BASE_URL }}
       BRIEFING_TIMEZONE: Asia/Seoul
       BRIEFING_RUN_ONCE: 'true'
       BRIEFING_LAT: '37.5258'
@@ -36,6 +34,24 @@ jobs:
           echo "event_name=${{ github.event_name }}"
           echo "ref=${{ github.ref }}"
           date -u
+
+      - name: Validate required env
+        run: |
+          test -n "$SLACK_WEBHOOK_URL" || (echo "SLACK_WEBHOOK_URL is missing" && exit 1)
+          test -n "$KSKILL_PROXY_BASE_URL" || (echo "KSKILL_PROXY_BASE_URL is missing" && exit 1)
+
+      - name: Proxy route health check
+        run: |
+          set -e
+          curl -fsS --get "${KSKILL_PROXY_BASE_URL}/v1/korea-weather/forecast" \
+            --data-urlencode "lat=${BRIEFING_LAT}" \
+            --data-urlencode "lon=${BRIEFING_LON}" >/tmp/weather.json
+          curl -fsS --get "${KSKILL_PROXY_BASE_URL}/v1/fine-dust/report" \
+            --data-urlencode "regionHint=${BRIEFING_REGION_HINT}" >/tmp/finedust.json
+          head -c 200 /tmp/weather.json || true
+          echo
+          head -c 200 /tmp/finedust.json || true
+          echo
 
       - name: Send briefing
         run: node index.mjs
