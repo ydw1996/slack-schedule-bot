@@ -42,17 +42,52 @@ jobs:
           test -n "$TWELVE_DATA_API_KEY" || (echo "TWELVE_DATA_API_KEY is missing" && exit 1)
 
       - name: Proxy route health check
+        continue-on-error: true
         run: |
-          set -e
-          curl -fsS --get "${KSKILL_PROXY_BASE_URL}/v1/korea-weather/forecast" \
+          set -u
+
+          check_route() {
+            local name="$1"
+            local outfile="$2"
+            shift 2
+
+            local status="000"
+            local attempt
+            for attempt in 1 2 3; do
+              status=$(curl -sS -o "${outfile}" -w "%{http_code}" "$@")
+              if [ "${status}" = "200" ]; then
+                echo "[OK] ${name} status=${status}"
+                head -c 300 "${outfile}" || true
+                echo
+                return 0
+              fi
+
+              echo "[WARN] ${name} attempt=${attempt} status=${status}"
+              head -c 300 "${outfile}" || true
+              echo
+              sleep $((attempt * 2))
+            done
+
+            echo "::error::${name} failed after retries (last status=${status})"
+            return 1
+          }
+
+          weather_ok=0
+          finedust_ok=0
+
+          check_route "korea-weather" /tmp/weather.json \
+            --get "${KSKILL_PROXY_BASE_URL}/v1/korea-weather/forecast" \
             --data-urlencode "lat=${BRIEFING_LAT}" \
-            --data-urlencode "lon=${BRIEFING_LON}" >/tmp/weather.json
-          curl -fsS --get "${KSKILL_PROXY_BASE_URL}/v1/fine-dust/report" \
-            --data-urlencode "regionHint=${BRIEFING_REGION_HINT}" >/tmp/finedust.json
-          head -c 200 /tmp/weather.json || true
-          echo
-          head -c 200 /tmp/finedust.json || true
-          echo
+            --data-urlencode "lon=${BRIEFING_LON}" || weather_ok=1
+
+          check_route "fine-dust" /tmp/finedust.json \
+            --get "${KSKILL_PROXY_BASE_URL}/v1/fine-dust/report" \
+            --data-urlencode "regionHint=${BRIEFING_REGION_HINT}" || finedust_ok=1
+
+          if [ "${weather_ok}" -ne 0 ] || [ "${finedust_ok}" -ne 0 ]; then
+            echo "::warning::Proxy health check had failures. Proceeding to Send briefing because fallback logic exists."
+            exit 1
+          fi
 
       - name: Send briefing
         run: node index.mjs
